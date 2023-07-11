@@ -7,7 +7,7 @@
 	export default {
 		onLaunch: function() {
 			console.log('App Launch')
-			this.getConfig();
+			// this.getConfig();
 		},
 		onShow: function() {
 			console.log('App Show')

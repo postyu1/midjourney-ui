@@ -120,7 +120,7 @@
 		}
 		.notice_center{
 			flex:1;
-			height:50rpx;
+			height:80rpx;
 			.swiperIn{
 				height:40rpx;
 				display: flex;

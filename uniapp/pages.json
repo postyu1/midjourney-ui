@@ -1,10 +1,13 @@
 {
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		// {
+		// 	"path": "pages/index/index"
+		// },
 		{
-			"path": "pages/index/index"
-		},
-		{
-			"path": "pages/draw/draw"
+			"path": "pages/draw/draw",
+			"style": {
+				"navigationStyle": "custom"
+			}
 		},
 		{
 			"path": "pages/about/about"
@@ -15,39 +18,48 @@
 				"navigationBarTitleText": "stable-diffusion-mobileui"
 			}
 		}
-	],
-	"tabBar": {
-		"color": "#b3b3b3",
-		"selectedColor": "#F8D849",
-		"borderStyle": "white",
-		"backgroundColor": "#1A1A1A",
-		"list": [{
-				"pagePath": "pages/index/index",
-				"iconPath": "static/images/tab_home.png",
-				"selectedIconPath": "static/images/tab_home_sel.png",
-				"text": "SD创作"
-			},
-			{
-				"pagePath": "pages/draw/draw",
-				"iconPath": "static/images/tab_draw.png",
-				"selectedIconPath": "static/images/tab_draw_sel.png",
-				"text": "MJ创作"
-			},
-			{
-				"pagePath": "pages/about/about",
-				"iconPath": "static/images/tab_about.png",
-				"selectedIconPath": "static/images/tab_about_sel.png",
-				"text": "关于"
-			}
-		]
-	},
+	    ,{
+            "path" : "pages/login/login",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+    ],
+	// "tabBar": {
+	// 	"color": "#b3b3b3",
+	// 	"selectedColor": "#F8D849",
+	// 	"borderStyle": "white",
+	// 	"backgroundColor": "#1A1A1A",
+	// 	"list": [{
+	// 			"pagePath": "pages/index/index",
+	// 			"iconPath": "static/images/tab_home.png",
+	// 			"selectedIconPath": "static/images/tab_home_sel.png",
+	// 			"text": "SD创作"
+	// 		},
+	// 		{
+	// 			"pagePath": "pages/draw/draw",
+	// 			"iconPath": "static/images/tab_draw.png",
+	// 			"selectedIconPath": "static/images/tab_draw_sel.png",
+	// 			"text": "MJ创作"
+	// 		},
+	// 		{
+	// 			"pagePath": "pages/about/about",
+	// 			"iconPath": "static/images/tab_about.png",
+	// 			"selectedIconPath": "static/images/tab_about_sel.png",
+	// 			"text": "关于"
+	// 		}
+	// 	]
+	// },
 	"easycom": {
 		"autoscan": true,
 		"custom": {}
 	},
 	"globalStyle": {
 		"navigationBarTextStyle": "white",
-		"navigationBarTitleText": "stable-diffusion-mobileui",
+		"navigationBarTitleText": "",
 		"navigationBarBackgroundColor": "#000",
 		"backgroundColor": "#000",
 		"app-plus": {

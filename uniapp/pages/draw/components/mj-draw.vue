@@ -14,88 +14,18 @@
 					<view class="text-num">{{cueword_num}}/{{maxinput}}</view>
 				</view>
 			</view>
-			<view class="translate-box">
-				<view class="translate" @click="clickTranslate(true)">
-					<text class="iconfont icon-qiehuan"></text>翻译英文
-				</view>
-			</view>
-			<!-- 模型选择 -->
-			<view class="box-content model-box">
-				<view class="item-section">大模型选择</view>
-				<view class="model-content">
-					<view class="model-item-list" v-for="(item,index) in models" :key="index">
-						<view class="model-item" :class="item.selected?'model-sel':''" @click="clickModel(item,index)">
-							<view class="model-item-txt yuanyue-line">{{item.title}}</view>
-						</view>
-					</view>
-				</view>
-			</view>
-			<!-- 提示词相关度 -->
-			<view class="box-content cueword-box" v-if="selModel && selModel.have_relevace">
-				<view class="section-box">
-					<view class="item-section">相关度</view>
-					<view class="item-right" @click="clickCuewordInfo">
-						<text class="iconfont icon-xiangqing"></text>说明
-					</view>
-				</view>
-				<view class="slier">
-					<slider :value="formData.relevance" min="0" max="1000" @change="cuewordSliderChange"
-						:show-value="true" active-color="#F8D849" block-color="#F8D849" block-size="20"></slider>
-				</view>
-			</view>
-
-			<!-- 选择图片 -->
-			<view class="box-content reference-box">
-				<view class="item-section">参考图 <text class="item-section-subs">(选填)</text> </view>
-				<view class="refer-content">
-					<view class="refer-item refer-normal" v-if="!formData.have_img" @click.stop="clickSelImage">
-						<text class="iconfont icon-jiahao"></text>
-					</view>
-					<view class="refer-item refer-sel" v-else @click.stop="clickSelImage">
-						<image :src="formData.image_path" mode="aspectFill"></image>
-						<view class="clear-image" @click.stop="clearImage">
-							<text class="iconfont icon-guanbi"></text>
-						</view>
-					</view>
-				</view>
-			</view>
-
-			<!-- 图片影响度 -->
-			<view class="box-content cueword-box" v-if="formData.have_img">
-				<view class="item-section">图片影响度</view>
-				<view class="slier">
-					<slider :value="formData.influence" step="0.1" min="0.5" max="2" @change="influenceSliderChange"
-						:show-value="true" active-color="#F8D849" block-color="#F8D849" block-size="20"></slider>
-				</view>
-			</view>
-
-			<!-- 尺寸比例 -->
-			<view class="box-content ratio-box">
-				<view class="item-section">尺寸比例</view>
-				<view class="ratio-content">
-					<view class="ratio-list" v-for="(item,index) in sizeRatios" :key="index">
-						<view class="ratio-item" :class="item.selected?'ratio-sel':''"
-							@click="clickRatioChange(item,index)">
-							<view class="item-shape-box">
-								<view class="item-shape" :style="'width:'+item.width+'px;height:'+item.height+'px;'">
-								</view>
-							</view>
-							<view class="item-txt">{{item.ratio}}</view>
-						</view>
-					</view>
-				</view>
-			</view>
 
 			<!-- 提交 -->
-			<view class="submit-box" @click="clickSubmit">
-				<view class="submit-btn" v-if="!generatesImages || generatesImages.length<=0">立即生成</view>
-				<view class="submit-btn" v-else>再来一次</view>
+			<view class="submit-box" >
+				<view class="submit-btn" style="margin-right: 20px;" @click="clickSubmit" v-if="!generatesImages || generatesImages.length<=0">立即生成</view>
+				<view class="submit-btn" style="margin-right: 20px;" @click="clickSubmit" v-else>再来一次</view>
+				<view class="submit-btn" @click="clearInfo">清空当前</view>
 			</view>
 			<!--  -->
-			<view class="desc-box">
-				<view class="desc">生成时间1-3分钟,请耐心等待</view>
+			<view class="desc-box" v-if="!showDealTool">
+				<view class="desc">期待你的创作！</view>
+				<view style="margin-top: 20rpx;" class="desc">快在「提示词」中写下你的绘图想法吧~</view>
 			</view>
-
 			<!-- 生成结果 -->
 			<view id="result-rect" class="box-content result-box">
 				<view class="result-content" v-if="generatesImages">
@@ -117,7 +47,7 @@
 							@click="clickRedrawItem(item)">{{item.title}}</view>
 					</view>
 				</view>
-				<view class="item-section">单张下载</view>
+				<view class="item-section">希望高清放大的图片</view>
 				<view class="same-redraw-box">
 					<view class="same-redraw-list" v-for="(item,index) in redrawTypes" :key="index">
 						<view class="same-redraw-list-item"
@@ -134,35 +64,23 @@
 					</view>
 				</view>
 			</view>
-
-
 			<view class="yuanyue-safe20"></view>
 		</scroll-view>
 	</view>
 </template>
 
 <script>
-	// +—————————————————————————————————————————————————————————————————————
-	// | Created by 元岳科技
-	// +—————————————————————————————————————————————————————————————————————
-	// | Copyright (c) 2013~2023 http://www.yuanyuekj.com/ All rights reserved.
-	// +—————————————————————————————————————————————————————————————————————
-	// | GITEE: https://gitee.com/yuanyuekeji/stable-diffusion-mobileui
-	// +—————————————————————————————————————————————————————————————————————
-	// | GITHUB: https://github.com/yuanyuekeji/stable-diffusion-mobileui
-	// +—————————————————————————————————————————————————————————————————————
+	import {setStorage,getStorage} from "@/common/utils.js"
 	import {
 		TIMER_FETCH_INTERVAL,
 		FETCH_REPEAT_COUNT
 	} from "@/config/app.js"
 	import {
-		mapGetters
-	} from 'vuex';
-	import {
-		getTranslate,
 		postMjAddAll,
 		getMjFetch,
-		postMjChange
+		postMjChange,
+		addTaskRecord,
+		getRecordInfo
 	} from "@/api/api.js"
 	import {
 		HTTP_URL_SD
@@ -179,7 +97,7 @@
 		computed: {
 			imgSize() {
 				let s_w = uni.getSystemInfoSync().screenWidth;
-				let img_w = s_w * 0.7;
+				let img_w = s_w * 0.4;
 				return img_w;
 			}
 		},
@@ -198,84 +116,8 @@
 					influence: 1, // 图片影响度
 					size_ratio: '1:1',
 				},
-				maxinput: 1000,
+				maxinput: 500,
 				cueword_num: 0,
-				models: [{
-					id: 0,
-					title: 'mj-v5.1',
-					value: '--v 5.1',
-					selected: false,
-					have_relevace:true,
-				}, {
-					id: 1,
-					title: 'mj-v5',
-					value: '--v 5',
-					selected: true,
-					have_relevace:true,
-				}, {
-					id: 2,
-					title: 'mj-v4',
-					value: '--v 4',
-					selected: false,
-					have_relevace:true,
-				}, {
-					id: 3,
-					title: 'niji-v4',
-					value: '--niji 4',
-					selected: false,
-					have_relevace:false,
-				}, {
-					id: 4,
-					title: 'niji-v5',
-					value: '--niji 5',
-					selected: false,
-					have_relevace:true,
-				}],
-				selModel:null,
-				sizeRatios: [{
-					ratio: '1:1',
-					width: 10,
-					height: 10,
-					val: 0,
-					selected: true
-				}, {
-					ratio: '9:16',
-					width: 9,
-					height: 16,
-					val: 2,
-					selected: false
-				}, {
-					ratio: '16:9',
-					width: 16,
-					height: 9,
-					val: 3,
-					selected: false
-				}, {
-					ratio: '3:4',
-					width: 3,
-					height: 4,
-					val: 4,
-					selected: false
-				}, {
-					ratio: '4:3',
-					width: 4,
-					height: 3,
-					val: 5,
-					selected: false
-				}, {
-					ratio: '2:3',
-					width: 2,
-					height: 3,
-					val: 6,
-					selected: false
-				}, {
-					ratio: '3:2',
-					width: 3,
-					height: 2,
-					val: 7,
-					selected: false
-				}],
-
 				redrawTypes: [{
 						title: '左上',
 						down_val: 'U1',
@@ -312,6 +154,12 @@
 				fetchRepeat: false,
 				generatesImages: '',
 				generateDownImage:'',
+				loadingTxt:'请稍后...',
+				fromHistory:false, // 从历史列表返回
+				nowTaskInfo:{},
+				historyVList:[],
+				historyUList:[],
+				baseRecordId:''
 			}
 		},
 		watch: {
@@ -321,190 +169,108 @@
 		},
 
 		mounted() {
-			this.sizeDeal();
-			this.resetModel();
+			// this.getMjFetch('9597543304885748')
+			// this.gener_task_id = '2912531201146109'
+			// this.sizeDeal();
+			// this.resetModel();
 			let that = this;
 			this.$utils.getRect('#result-rect').then(res => {
 				this.resultRectTop = res.top;
 			})
 		},
 		methods: {
-			sizeDeal() {
-				this.sizeRatios.forEach((item, index) => {
-					let min = 0.3;
-					let sizeBase = 5;
-					if (index > 2) {
-						min = 1;
-					}
-					let n_w = item.width * sizeBase * min;
-					let n_h = n_w * item.height / item.width;
-					item.width = n_w;
-					item.height = n_h;
-				});
-			},
-			resetModel(){
-				this.models.forEach(item=>{
-					if(item.selected){
-						this.selModel = item;
-					}
-				})
-			},
-			/**
-			 * 翻译
-			 */
-			clickTranslate(showAlert) {
-				if (!this.cueword) {
-					return this.$utils.showToast('内容不能为空');
-				}
-				let postDic = {
-					doctype: 'json',
-					type: 'ZH_CN2EN',
-					i: this.cueword
-				}
-				if (showAlert) {
-					uni.showLoading({
-						title: '请稍后...',
-						mask: true
-					})
-				}
-				return new Promise((reslove, reject) => {
-					getTranslate(postDic).then(res => {
-						if (showAlert) {
-							uni.hideLoading()
-						}
-						if (res.errorCode == 0) {
-							let result = res.translateResult;
-							let tgt = result.map(item => {
-								return item.map(subitem => subitem.tgt).join(',')
-							}).join(',');
-
-							this.cueword = tgt;
-
-							reslove(true);
-						} else {
-							if(showAlert){
-								this.$utils.showToast('翻译失败,请重试');
-							}
-							//注意这里不要reject
-							reslove(false)
-						}
-					}).catch(err => {
-						if (showAlert) {
-							uni.hideLoading()
-							this.$utils.showToast('翻译失败,请重试');
-						}
-						//注意这里不要reject
-						reslove(false)
-					});
-				});
-			},
-			/**
-			 * 切换模型
-			 */
-			clickModel(item, index) {
-				this.models.forEach((fItem, fIndex) => {
-					fItem.selected = false;
-				})
-				item.selected = true;
-				this.formData.model = item.value;
-				this.selModel = item;
-			},
-			/**
-			 * 提示词相关性改变
-			 */
-			cuewordSliderChange(e) {
-				this.formData.relevance = e.detail.value;
-			},
-			clickCuewordInfo() {
+			clearInfo() {
 				uni.showModal({
-					content: '数值越高会产生与提示词紧密相匹配但艺术感较低的图像，数值越低创建的图片非常艺术，但与提示词的连接较少。',
-					showCancel: false,
-					confirmColor: '#F8D849',
-					success() {}
+					title: '提示',
+					content: '确定清空当前?',
+					success: (res) => {
+						if (res.confirm) {
+							this.type = 0
+							this.isGenerating = false
+							this.redrawForm.down_val = ''
+							this.redrawForm.draw_val = ''
+							this.gener_task_id = ''
+							this.down_task_id= ''
+							this.draw_task_id = ''
+							this.generatesImages = ''
+							this.generateDownImage = ''
+							this.showDealTool = false
+							this.cueword = ''
+						}
+					}
 				})
 			},
-			/**
-			 * 选择图片
-			 */
-			clickSelImage() {
-				if (this.isGenerating) {
-					return;
+			// 从历史记录跳转过来的
+			setDefaultData(item) {
+				this.fromHistory = true
+				this.generateDownImage = ''
+				this.gener_task_id = item.task_id
+				this.baseRecordId = item.base_record_id
+				// this.nowTaskInfo = item
+				if(item.task_status == 'SUCCESS'||item.task_status == 'IN_PROGRESS') {
+					// 获取单个数据
+					let taskInfo = JSON.parse(item.task_json)
+					this.cueword = taskInfo.prompt
+					this.generatesImages = taskInfo.image_url;
+					getRecordInfo(this.gener_task_id).then(data=>{
+						data.variation_list.map(item=>{
+							if(item.task_json) {
+								item.vOpt = JSON.parse(item.task_json).description.slice(-2)
+							}
+						})
+						data.upscale_list.map(item=>{
+							if(item.task_json) {
+								let objU = JSON.parse(item.task_json)
+								item.uOpt = objU.description.slice(-2)
+								item.uImageUrl = objU.image_url
+							}
+						})
+						this.historyUList = data.upscale_list
+						this.historyVList = data.variation_list
+						this.showDealTool = true;
+						this.toolBtnReset();
+					})
+				} else {
+					this.getMjFetch(this.gener_task_id)
 				}
-				this.$utils.uploadImageOne({
-					url: 'mj_upload',
-					type: 'mj'
-				}, res => {
-					this.formData.have_img = true;
-					this.formData.image_path = res;
-				})
-			},
-			clearImage() {
-				this.formData.have_img = false;
-				this.formData.image_path = '';
-			},
-			/**
-			 * 图片影响度改变
-			 */
-			influenceSliderChange(e) {
-				this.formData.influence = e.detail.value;
 			},
 
-			/**
-			 * 尺寸比例改变
-			 */
-			clickRatioChange(item, index) {
-				this.sizeRatios.forEach((fItem, fIndex) => {
-					fItem.selected = false;
-				});
-				item.selected = true;
-				this.formData.size_ratio = item.ratio;
-			},
 			/**
 			 * 开始生成
 			 */
-			async clickSubmit() {
+			 clickSubmit() {
 				if (!this.cueword) {
 					return this.$utils.showToast("请输入提示词")
 				}
 				if (this.isGenerating) {
 					return this.$utils.showToast("请稍后...")
 				}
-				
 				this.task_type = 0;
 				this.generatesImages = '';
 				this.generateDownImage = '';
-				
+				this.historyUList = []
+				this.historyVList = []
 				uni.showLoading({
 					title: '请稍后...',
 					mask: true
 				});
-
-				// 信息处理
-				let post_str = '';
-				if (this.formData.have_img) {
-					post_str += this.formData.image_path + ' ';
-				}
-				let trans_res = await this.clickTranslate(false);
-				
-				post_str += this.cueword + ' ';
-				post_str += this.formData.model + ' ';
-				if(this.selModel.have_relevace){
-					post_str += '--s ' + this.formData.relevance + ' ';
-				}
-				post_str += '--ar ' + this.formData.size_ratio;
-				if (this.formData.have_img) {
-					post_str += ' --iw ' + this.formData.influence;
-				}
-				
 				let postDic = {
-					prompt: post_str
+					prompt: this.cueword
 				}
 				this.isGenerating = true;
 				postMjAddAll(postDic).then(res => {
+					// this.setTaskListStorage({id:res.result})
 					if (res.code == 1) {
-						this.gener_task_id = res.result;
-						this.timerClear = false;
-						this.createTimer(this.gener_task_id);
+						addTaskRecord({'task_id':res.result,'action':'IMAGINE'}).then(addRes=>{
+							this.gener_task_id = res.result;
+							this.timerClear = false;
+							this.createTimer(this.gener_task_id);
+							this.baseRecordId = addRes
+						}).catch(err=>{
+							this.isGenerating = false;
+							uni.hideLoading()
+							this.$utils.showToast(err);
+						})
 					} else {
 						this.isGenerating = false;
 						uni.hideLoading()
@@ -515,7 +281,6 @@
 					this.isGenerating = false;
 				});
 			},
-
 			/**
 			 * 创建计时器
 			 */
@@ -542,17 +307,20 @@
 			 * 获取图片进度
 			 */
 			getMjFetch(taksId) {
-				let postDic = {
-					taskId: taksId,
-				}
 				uni.showLoading({
-					title: "请稍后...",
+					title: this.loadingTxt,
 					mask: true
 				})
 				let that = this;
-
-				getMjFetch(postDic).then(res => {
+				getMjFetch(taksId).then(res => {
+					// 只有生成的任务才存入缓存
+					// if(this.task_type == 0 || this.task_type == 1) {
+					// 	this.setTaskListStorage(res)
+					// } 
 					if (res.status == 'NOT_START' || res.status == 'IN_PROGRESS' || res.status == 'SUBMITTED') {
+						if(res.status == 'IN_PROGRESS'&&res.progress!='paused') {
+							this.loadingTxt = `正在生成(${res.progress})...`
+						}
 						if (that.fetchRepeat) {
 							that.fetchRepeat = false;
 							that.destroyTimer();
@@ -560,11 +328,14 @@
 						}
 					} else if (res.status == 'SUCCESS') {
 						uni.hideLoading()
+						this.loadingTxt = '请稍后...'
 						this.fetchErrCount = 0;
-						
 						if (this.task_type == 2) {
-							// 下载任务
+							// 下载任务成功
 							this.generateDownImage = res.imageUrl;
+							this.historyUList.push({uOpt:this.redrawForm.down_val,uImageUrl:res.imageUrl})
+							// this.nowTaskInfo.u_info = res
+							// this.setTaskListStorage(this.nowTaskInfo)
 						} else if (this.task_type == 1) {
 							// 重绘
 							this.generatesImages = res.imageUrl;
@@ -578,12 +349,11 @@
 							this.showDealTool = true;
 							this.toolBtnReset();
 						}
-						this.$utils.showToast('获取成功');
+						this.$utils.showToast('恭喜！您的图片已经生成完成');
 						// 销毁
 						this.destroyTimer();
 						// 滚动
 						that.scrollToRes();
-
 					} else {
 						let err_msg = '获取失败';
 						if(res.failReason){
@@ -613,52 +383,29 @@
 				});
 			},
 			/**
-			 * 重绘-选择重绘的图
-			 */
-			clickRedrawItem(item) {
-				if (item.draw_val == this.redrawForm.draw_val) {
-					return
-				}
-				this.redrawForm.draw_val = item.draw_val;
-			
-				this.task_type = 1;
-				this.generateDownImage = '';
-				this.generatesImages = '';
-				
-				uni.showLoading({
-					title: "请稍后...",
-					mask: true
-				})
-				this.isGenerating = true;
-				let postDic = {
-					content: this.gener_task_id + " " + item.draw_val
-				}
-				postMjChange(postDic).then(res => {
-					if (res.code == 1) {
-						this.draw_task_id = res.result;
-						this.timerClear = false;
-						this.createTimer(this.draw_task_id);
-					} else {
-						uni.hideLoading()
-						this.$utils.showToast(res.description);
-					}
-				}).catch(err => {
-					uni.hideLoading()
-				});
-			
-			},
-			/**
 			 * 单张下载
 			 */
 			clickDownItem(item) {
 				if (item.down_val == this.redrawForm.down_val) {
 					return
 				}
+				// 判断是否已经生成过
+				if(this.historyUList.length>0) {
+					let findObj = this.historyUList.find(data=>{
+						return data.uOpt == item.down_val
+					})
+					if(findObj&&findObj.uOpt&& findObj.uImageUrl){
+						this.redrawForm.down_val = findObj.uOpt
+						this.generateDownImage = findObj.uImageUrl
+						return
+					}
+				}
+				if(!this.gener_task_id) {
+					this.$utils.showToast('生成放大图片有误'); return;
+				}
 				this.redrawForm.down_val = item.down_val;
-			
 				this.task_type = 2;
 				this.generateDownImage = '';
-			
 				uni.showLoading({
 					title: "请稍后...",
 					mask: true
@@ -669,21 +416,93 @@
 				}
 				postMjChange(postDic).then(res => {
 					if (res.code == 1) {
-						this.down_task_id = res.result;
-						this.timerClear = false;
-						this.createTimer(this.down_task_id);
+						addTaskRecord({'task_id':res.result,'action':'UPSCALE',parent_task_id:this.gener_task_id}).then(addRes=>{
+							this.down_task_id = res.result;
+							this.timerClear = false;
+							this.createTimer(this.down_task_id);
+						}).catch(err=>{
+							this.isGenerating = false;
+							uni.hideLoading()
+							this.$utils.showToast(err);
+						})
 					} else {
 						uni.hideLoading()
+						this.redrawForm.down_val = ''
 						this.$utils.showToast(res.description);
 					}
 				}).catch(err => {
 					uni.hideLoading()
+					this.redrawForm.down_val = ''
+					this.isGenerating = false;
 				});
-			
+			},
+			// 重绘某张图
+			clickRedrawItem(item) {
+				if (item.draw_val == this.redrawForm.draw_val) {
+					return
+				}
+				if(this.historyVList.length>0) {
+					let findObj = this.historyVList.find(data=>{
+						return data.vOpt == item.draw_val
+					})
+					if(findObj) {
+						this.redrawForm.draw_val = item.draw_val;
+						this.setDefaultData(findObj)
+						return
+					}
+				}
+				uni.showLoading({
+					title: "请稍后...",
+					mask: true
+				})
+				this.isGenerating = true;
+				let postDic = {
+					content: this.gener_task_id + " " + item.draw_val
+				}
+				postMjChange(postDic).then(res => {
+					this.redrawForm.draw_val = item.draw_val;
+					if (res.code == 1) {
+						// 添加任务
+						addTaskRecord({'task_id':res.result,'action':'VARIATION',parent_task_id:this.gener_task_id,
+							'base_action':'IMAGINE',base_record_id:this.baseRecordId})
+							.then(addResult=>{
+								this.task_type = 1;
+								this.generateDownImage = '';
+								this.generatesImages = '';
+								this.draw_task_id = res.result;
+								this.historyVList = []
+								this.historyUList = []
+								this.toolBtnReset()
+								this.timerClear = false;
+								this.createTimer(this.draw_task_id);
+							}).catch(error=>{
+								uni.hideLoading()
+								this.isGenerating = false;
+								this.toolBtnReset()
+								this.$utils.showToast(error);
+							})
+					} else {
+						uni.hideLoading()
+						this.isGenerating = false;
+						this.toolBtnReset()
+						this.$utils.showToast(res.description);
+					}
+				}).catch(err => {
+					uni.hideLoading()
+					this.redrawForm.draw_val = '';
+					this.isGenerating = false;
+				});
 			},
 			toolBtnReset(){
 				this.redrawForm.draw_val = '';
-				this.redrawForm.down_val = '';
+				// 判断U操作数组是否里面有数据
+				if(this.historyUList.length >0) {
+					let uInfo = this.historyUList[0]
+					this.redrawForm.down_val = uInfo.uOpt||''
+					this.generateDownImage = uInfo.uImageUrl||''
+				} else {
+					this.redrawForm.down_val = '';
+				}
 			},
 			onScroll(e) {
 				if (e.detail.scrollTop <= 10) {
@@ -709,7 +528,6 @@
 				})
 			},
 
-
 		}
 	}
 </script>
@@ -721,9 +539,10 @@
 	}
 
 	.input-item {
-		margin-top: 30rpx;
+		margin: 50rpx auto;
 		background-color: #323232;
 		padding: 20rpx;
+		width: 80%;
 		border-radius: 10rpx;
 
 		.section {
@@ -731,7 +550,7 @@
 			align-items: baseline;
 			font-size: 15px;
 			color: $yuanyue-color-main;
-
+		
 			.title {
 				font-weight: bold;
 				margin-right: 8rpx;
@@ -743,7 +562,6 @@
 		}
 
 		.text-area {
-
 			textarea {
 				width: 100%;
 				height: 120px;
@@ -779,7 +597,8 @@
 	}
 
 	.item-section {
-		padding: 30rpx 0 10rpx;
+		padding: 40rpx 80rpx 40rpx;
+		text-align: center;
 
 		.item-section-subs {
 			font-size: 13px;
@@ -941,8 +760,7 @@
 	.submit-box {
 		display: flex;
 		justify-content: center;
-		margin: 80rpx 0 20rpx;
-
+		margin: 40rpx 0 20rpx;
 		.submit-btn {
 			width: 80%;
 			padding: 20rpx 0;
@@ -953,12 +771,11 @@
 			justify-content: center;
 		}
 	}
-
 	.desc-box {
-		display: flex;
-		justify-content: center;
-
+		// display: flex;
+		// justify-content: center;
 		.desc {
+			text-align: center;
 			font-size: 14px;
 		}
 	}
@@ -981,7 +798,8 @@
 		.same-redraw-box {
 			display: flex;
 			flex-wrap: wrap;
-	
+			width: 80%;
+			margin: 0 auto 50rpx;
 			.same-redraw-list {
 				width: calc(25% - 17rpx);
 				margin-right: 20rpx;

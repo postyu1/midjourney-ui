@@ -9,20 +9,19 @@
 // +—————————————————————————————————————————————————————————————————————
 
 import {
-	HTTP_URL_SD,
+	SEMSX_API,
 	HTTP_URL_MJ,
 	HEADER,
 	TOKENNAME
 } from '@/config/app';
 import utils from "@/common/utils";
 import store from '../store';
-import { urlToHttpOptions } from 'url';
 
 
 function toLogin() {
 	store.commit("LOGOUT");
 	uni.showToast({
-		title: '请登录',
+		title: '请先完成登录！',
 		icon: 'none',
 		duration: 1000
 	});
@@ -36,6 +35,7 @@ function baseRequest(url, method, data, {
 	noVerify = false,
 	noAlert = false,
 	isMj = false,
+	isToken = false
 }) {
 	let Url = '',
 		header = HEADER;
@@ -44,30 +44,32 @@ function baseRequest(url, method, data, {
 	if(isMj){
 		Url = HTTP_URL_MJ + url;
 	}else{
-		Url = HTTP_URL_SD + url;
+		Url = SEMSX_API + url;
 	}
 	if (!noAuth) {
 		//登录过期自动登录
 		if (!store.state.app.token) {
 			toLogin();
 			return Promise.reject({
-				msg: '未登录'
+				msg: '请先登录'
 			});
 		}
-	}
-
-	if (store.state.app.token) {
-		header[TOKENNAME] = store.state.app.token;
-	}
-	if (store.state.app.uid) {
-		if (data) {
-			data.user_id = store.state.app.uid;
-		} else {
-			data = {
-				user_id: store.state.app.uid
-			};
+		if(isToken) {
+			header.access_token = store.state.app.token
 		}
 	}
+	// if (store.state.app.token) {
+	// 	header[TOKENNAME] = store.state.app.token;
+	// }
+	// if (store.state.app.uid) {
+	// 	if (data) {
+	// 		data.user_id = store.state.app.uid;
+	// 	} else {
+	// 		data = {
+	// 			user_id: store.state.app.uid
+	// 		};
+	// 	}
+	// }
 	
 	return new Promise((reslove, reject) => {
 		uni.request({
@@ -80,7 +82,22 @@ function baseRequest(url, method, data, {
 				// console.log("rk===>[requst-suc-url]",Url,res);
 				let statusCode = res.statusCode;
 				if(statusCode == 200){
-					reslove(res.data);
+					if(isMj) {
+						reslove(res.data);
+					} else {
+						if(res.data.errno == 0) {
+							reslove(res.data.result||"")
+							// let returnData = ""
+							// if(res.data.result) {
+							// 	returnData = JSON.stringify(res.data.result)
+							// }
+							// console.log(returnData)
+							// resolve(returnData)
+						} else {
+							reject(res.data.errmsg)
+							utils.showToast(res.data.errmsg);
+						}
+					}
 				}else{
 					let showErr = '请求失败'+statusCode;
 					if (!noAlert) {

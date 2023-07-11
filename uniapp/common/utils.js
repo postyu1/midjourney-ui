@@ -518,6 +518,50 @@ function unique(data) {
 	}
 	return data;
 }
+/**
+ * @param {Object} opt
+ * @param {Object} successCallback
+ * @param {Object} errorCallback
+ */
+
+function getImageBase64() {
+	return new Promise((resolve,reject)=>{
+		uni.chooseImage({
+			count: 1,
+			sizeType: ['compressed'],
+			sourceType: ['album', 'camera'],
+			success: function(res) {
+					let imgPath = res.tempFilePaths[0];
+					// 获取文件系统管理对象
+					uni.request({
+						url: imgPath,
+						method: 'GET',
+						responseType: 'arraybuffer',
+						success: res => {
+							let base64 = uni.arrayBufferToBase64(res.data); //把arraybuffer转成base64
+							base64 = 'data:image/png;base64,' + base64;
+							resolve(base64)
+						},
+						fail: (e) => {
+							reject()
+						}
+					})
+			}
+		})
+	})
+}
+// 根据图片路径获取base64编码
+async function getBase64ByUrl(url) {
+	const response = await fetch(url);
+	// 获取 Blob 对象
+	const blob = await response.blob();
+	return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onloadend = () => resolve(reader.result);
+			reader.onerror = reject;
+			reader.readAsDataURL(blob);
+	});
+}
 
 /*
  * 单图上传
@@ -773,7 +817,17 @@ function floatAutoDecimal2(x) {
 	}
 	return floatStr;
 }
+function timestampToDateTime(timestamp) {
+    let date = new Date(timestamp);   // 转换为Date对象
+    let year = date.getFullYear();
+    let month = ("0" + (date.getMonth() + 1)).slice(-2);
+    let day = ("0" + date.getDate()).slice(-2);
+    let hour = ("0" + date.getHours()).slice(-2);
+    let minute = ("0" + date.getMinutes()).slice(-2);
+    let second = ("0" + date.getSeconds()).slice(-2);
 
+    return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
+}
 function gePrivateTel(tel) {
 	/*
     let reg = /^(\d{3})\d{4}(\d{4})$/;
@@ -841,11 +895,13 @@ module.exports = {
 	pathToBase64,
 	base64ToPath,
 	base64ToBlob,
+	getBase64ByUrl,
 	showWeekFirstDay,
 	showMonthFirstDay,
 	getQuarterStartDate,
 	unique,
 	uploadImageOne,
+	getImageBase64,
 	uploadImgWithPath,
 	getRect,
 	isEmpty,
@@ -854,4 +910,5 @@ module.exports = {
 	gePrivateTel,
 	floatAutoDecimal2,
 	fn_Guid,
+	timestampToDateTime
 }

@@ -13,7 +13,7 @@ import store from "../store/index.js"
 import pagesJson from '@/pages.json'
 
 // app初次启动是否跳转登陆
-const isAllLogin = false;
+const isAllLogin = true;
 
 // 登录页地址
 // const loginPage = "/pages/test/test1";
@@ -93,6 +93,7 @@ const install = function(Vue, options) {
 
 const appLaunch = function(){
 	if(!store.state.app.token && isAllLogin){
+		console.log(123)
 		goLogin();
 	}
 }

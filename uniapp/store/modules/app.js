@@ -20,15 +20,11 @@ const mutations = {
 	LOGIN(state, opt) {
 		if(opt.token){
 			state.token = opt.token;
-			uni.setStorageSync("yuanyue_token",opt.token);
+			uni.setStorageSync("access_token",opt.token);
 		}
-		if(opt.id){
-			state.uid = opt.id;
-			uni.setStorageSync("yuanyue_uid",opt.id);
-		}
-		if(opt.token && opt.id && opt.nickname){
+		if(opt.token && opt.user_name){
 			state.userInfo = opt;
-			uni.setStorageSync("yuanyue_user_info",opt);
+			uni.setStorageSync("user_info",opt);
 		}
 	},
 	SETUID(state,val){
@@ -38,9 +34,9 @@ const mutations = {
 	LOGOUT(state) {
 		state.token = null;
 		state.uid = null
-		uni.removeStorageSync("yuanyue_token")
-		uni.removeStorageSync("yuanyue_uid")
-		uni.removeStorageSync("yuanyue_user_info")
+		state.userInfo = null
+		uni.removeStorageSync("access_token")
+		uni.removeStorageSync("user_info")
 		console.log("rk===>[清理完毕]");
 	},
 	SETUSERINFO(state, userInfo) {
@@ -83,6 +79,12 @@ const actions = {
 			}).catch(() => {
 
 			});
+	},
+	SETINFO({commit},data) {
+		commit("LOGIN", data);
+	},
+	LOGOUT({commit}) {
+		commit("LOGOUT");
 	}
 };
 

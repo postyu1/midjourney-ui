@@ -12,8 +12,9 @@ import request from "@/common/request.js";
 import {
 	HTTP_CONFIG_URL,
 	HTTP_TRANSLATE_URL,
+	SEMSX_API
 } from '@/config/app';
-
+let notifyHook = SEMSX_API + '/Web/Mj/updateMjRecord'
 /// MJ
 /**
  * 公共配置
@@ -24,100 +25,109 @@ export function getConfig(data) {
 	});
 }
 
-/**
- * 翻译
- */
-export function getTranslate(data) {
-	return request.get('/translate', data, {
-		isMj: true,
-		noAlert:true,
-	});
-}
-/**
- * MJ生成图片
- */
-export function postMjAdd(data) {
-	return request.post('/mj_add', data, {
-		isMj: true
-	});
-}
+
 /**
  * MJ生成图片【通用】
  */
 export function postMjAddAll(data) {
-	return request.post('/mj_add_all', data, {
-		isMj: true
+	data.notifyHook = notifyHook
+	return request.post('/mj/submit/imagine', data, {
+		isMj: true,
+		noAuth:false
 	});
 }
-/**
- * MJ图片解析
- */
-export function postMjDescribe(data) {
-	return request.post('/mj_describe', data, {
-		isMj: true
-	});
-}
+
 /**
  * MJ任务查询
  */
 export function getMjFetch(data) {
-	return request.get('/mj_fetch', data, {
+	return request.get(`/mj/task/${data}/fetch`, null, {
 		isMj: true,
 		noAlert:true,
+		noAuth:false
 	});
 }
 /**
  * MJ图片处理
  */
 export function postMjChange(data) {
-	return request.post('/mj_change', data, {
-		isMj: true
+	data.notifyHook = notifyHook
+	return request.post('/mj/submit/simple-change', data, {
+		isMj: true,
+		noAuth:false
+	});
+}
+/**
+ * @param {Object} data
+ */
+export function postBlend(data) {
+	data.notifyHook = notifyHook
+	return request.post('/mj/submit/blend', data, {
+		isMj: true,
+		noAuth:false
+	});
+}
+
+/**
+ * 提交任务接口
+ */
+export function addTaskRecord(data) {
+	return request.post('/Web/Mj/addUserMjRecord', data, {
+		isMj: false,
+		noAuth:false,
+		isToken:true
+	});
+}
+/**
+ * @param {Object} 获取用户历史任务数据
+ * 
+ */
+export function getUserRecordList() {
+	return request.get('/Web/Mj/getMjRecordList', null, {
+		isMj: false,
+		noAuth:false,
+		isToken:true
+	});
+}
+
+// 获取单个数据详情
+export function getRecordInfo(taskId) {
+	return request.get('/Web/Mj/getMjRecordInfo', {task_id:taskId}, {
+		isMj: false,
+		noAuth:false,
+		isToken:true
 	});
 }
 
 
-/// SD
 /**
- * 全局信息
+ * 手机发送验证码接口
  */
-export function getCmdFlags(data){
-	return request.get('/sdapi/v1/cmd-flags',data);
+export function phoneCodeSend(data) {
+	return request.post('/Common/Tool/sendPhoneMessage', data, {
+		isMj: false,
+	});
+}
+/**
+ * 用户手机号验证码登录
+ * @param {Object} data
+ */
+export function phoneCodeLogin(data) {
+	return request.post('/Web/Mj/userLogin', data, {
+		isMj: false
+	});
 }
 
-/**
- * 获取模型
- */
-export function getSdModels(data){
-	return request.get('/sdapi/v1/sd-models',data);
-}
-/**
- * 获取模板
- */
-export function getSdLoRA(data){
-	return request.get('/file=extensions/a1111-sd-webui-tagcomplete/tags/temp/lora.txt',data);
-}
-/**
- * 获取采样方法
- */
-export function getSdSamplers(data){
-	return request.get('/sdapi/v1/samplers',data);
-}
-/**
- * 文生图
- */
-export function postTxt2img(data){
-	return request.post('/sdapi/v1/txt2img',data);
-}
-/**
- * 图生文
- */
-export function postPreprocess(data){
-	return request.post('/sdapi/v1/preprocess',data);
-}
-/**
- * 解析文本结果
- */
-export function getAnalysRes(fileDir,name){
-	return request.get(`/file=${fileDir}/${name}.txt`);
+export function getQiniuToken() {
+	return request.get('/Common/Tool/getQiniuToken', {file_type:1}, {
+		isMj: false
+	});
 }
 
+export function addFile(data) {
+	return request.post('/Common/AddStoreFile/addFile', data, {
+		isMj: false,
+		noAuth:false,
+		isToken:true
+	});
+}
